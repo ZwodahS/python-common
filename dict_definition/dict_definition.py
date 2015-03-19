@@ -26,11 +26,12 @@ class Field(object):
                             if a callable is used, a single value containing the instance of the field will be pass to it
     """
 
-    def __init__(self, is_required=False, choices=None, default=None, **kwargs):
+    def __init__(self, is_required=False, choices=None, default=None, allow_none=True, **kwargs):
 
         self.is_required = is_required
         self.choices = choices
         self.default = default
+        self.allow_none = allow_none
 
         if isinstance(choices, dict):
             self.reversed_choices = { v : k for k, v in choices.items() }
@@ -39,6 +40,8 @@ class Field(object):
             setattr(self, k, v)
 
     def get_error(self, value):
+        if value is None and self.allow_none:
+            return None
         if not self.is_valid_type(value):
             return ("type", value)
         if self.choices is not None and value not in self.choices:
@@ -161,7 +164,7 @@ class ListField(Field):
         self.inner_type = inner_type
 
     def get_error(self, value):
-        paraent_error = super().get_error(value)
+        parent_error = super().get_error(value)
         if parent_error is not None:
             return parent_error
 
@@ -186,6 +189,14 @@ class DictField(Field):
         self.type = dict
 
 
+class DefinedDictMapField(Field):
+
+    def __init__(self, model=None, **kwargs):
+        super().__init__(**kwargs)
+        self.type = dict
+        self.model = model
+
+
 class DefinedDictField(DictField):
     """Define a defineddict
     """
@@ -200,6 +211,15 @@ class DefinedDictField(DictField):
     def get_default_value(self):
         return self.model.make_default()
 
+
+class DefinedDictListField(Field):
+
+    def __init__(self, model, **kwargs):
+        if not issubclass(model, DefinedDict):
+            raise FieldError(message="Invalid model class for model field {0}".format(type(model)))
+        super().__init__(**kwargs)
+        self.model = model
+        self.type = list
 
 class DateTimeField(Field):
     """Define a datetime field
@@ -264,8 +284,8 @@ class DefinedDict(object, metaclass=DefinedDictMetaClass):
                 error = definition.get_error(value)
                 if error is not None:
                     yield (key_string, ) + error # combine the tuples
-                if isinstance(definition, DefinedDictField):
-                    yield from definition.model._get_document_errors(document.get(key), parent=key_string)
+                if isinstance(definition, DefinedDictField) and isinstance(value, dict):
+                    yield from definition.model._get_document_errors(value, parent=key_string)
             elif definition.is_required:
                 yield (key_string, "required")
 
@@ -290,7 +310,7 @@ class DefinedDict(object, metaclass=DefinedDictMetaClass):
         return default
 
     @classmethod
-    def clean(cls, document, set_default=True, remove_undefined=True, allow_none=False, populate_none=False):
+    def clean(cls, document, set_default=True, remove_undefined=True, allow_none=True, populate_none=True):
         """
         By default, set default value, remove undefined, remove none value
 
@@ -299,17 +319,29 @@ class DefinedDict(object, metaclass=DefinedDictMetaClass):
         allow_now           if False, all "None" value will be pop
         populate_none       if True, all keys that does not exist will be populate with None
         """
+        if document is None:
+            return
         for key, definition in cls._fields.items():
             if key not in document:
                 if definition.default is not None and set_default:
                     document[key] = definition.get_default_value()
                 elif populate_none:
                     document[key] = None
-            else:
-                if document.get(key) is None and not allow_none:
-                    document.pop(key)
-                elif isinstance(definition, DefinedDictField) and isinstance(document.get(key), dict):
-                    definition.model.clean(document.get(key))
+
+            if key in document:
+                value = document.get(key)
+                if value is None:
+                    if not allow_none:
+                        document.pop(key)
+                elif isinstance(definition, DefinedDictField) and isinstance(value, dict):
+                    definition.model.clean(document.get(key), set_default=set_default, remove_undefined=remove_undefined, allow_none=allow_none, populate_none=populate_none)
+                elif isinstance(definition, DefinedDictMapField) and isinstance(value, dict):
+                    for k, v in value.items():
+                        definition.model.clean(v, set_default=set_default, remove_undefined=remove_undefined, allow_none=allow_none, populate_none=populate_none)
+                elif isinstance(definition, DefinedDictListField) and isinstance(value, list):
+                    for v in value:
+                        definition.model.clean(v, set_default=set_default, remove_undefined=remove_undefined, allow_none=allow_none, populate_none=populate_none)
+
         if remove_undefined:
             for key in set(document.keys()) - set(cls._fields.keys()) : # remove all the undefined keys
                 document.pop(key)
