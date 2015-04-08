@@ -19,6 +19,8 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 import re
+import datetime
+import logging
 
 """
 Note:
@@ -204,7 +206,7 @@ class BoolField(TypedField):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(allowed_type=(bool, )**kwargs)
+        super().__init__(allowed_type=(bool, ), **kwargs)
 
 
 class ListField(TypedField):
@@ -237,7 +239,7 @@ class DateTimeField(Field):
 
     def errors(self, value, with_key=None):
         yield from super().errors(value, with_key)
-        if not isinstance(value, (datetime.datetime, )):
+        if value is not None and not isinstance(value, (datetime.datetime, )):
             if with_key is not None:
                 yield (with_key, Field.ERROR_TYPE, value)
             else:
@@ -249,6 +251,8 @@ class DictField(TypedField):
     """
 
     def __init__(self, **kwargs):
+        if "choices" in kwargs:
+            raise DictFieldError(message="choices is not allow for DictField or subclass of DictField")
         super().__init__(allowed_type=(dict, ), **kwargs)
 
 
@@ -272,7 +276,7 @@ class MapField(DictField):
         yield from super().errors(value, with_key)
         if isinstance(value, dict):
             if with_key is not None:
-                for k, v in value:
+                for k, v in value.items():
                     yield from self.inner_type.errors(v, ".".join([with_key, k]))
             else:
                 for k, v in value:
@@ -311,7 +315,10 @@ class DefinedDictField(DictField):
             yield from self.model._yield_errors(value, parent=with_key)
 
     def make_default(self):
-        return self.model.make_default()
+        if self.default is None:
+            return self.model.make_default()
+        else:
+            return super().make_default()
 
     def update(self, document, key, value):
         if isinstance(value, dict):

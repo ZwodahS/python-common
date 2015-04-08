@@ -19,7 +19,7 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 
-from dict_definition import *
+from .defined_dict import *
 
 class CleanerMixin(Mixin):
     """
