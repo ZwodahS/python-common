@@ -327,6 +327,12 @@ class DefinedDictField(DictField):
             else:
                 self.model.update(document[key], value)
 
+    def clean(self, document, key, set_default=True, **kwargs):
+        if key not in document:
+            if set_default:
+                document[key] = self.make_default()
+        if document.get(key) is not None:
+            self.model.clean_document(document[key], set_default=set_default, **kwargs)
 
 #################################### Mixin ####################################
 class Mixin(object):
@@ -404,13 +410,14 @@ class DefinedDict(object, metaclass=DefinedDictMetaClass):
     @classmethod
     def clean_document(cls, document, set_default=True, remove_undefined=True):
         if document is None:
-            return
+            return document
         for key, definition in cls._fields.items():
             definition.clean(document, key, set_default=set_default, remove_undefined=remove_undefined)
 
         if remove_undefined:
             for key in set(document.keys()) - set(cls._fields.keys()) : # remove all the undefined keys
                 document.pop(key)
+        return document
 
     @classmethod
     def update(cls, document, new_value):
