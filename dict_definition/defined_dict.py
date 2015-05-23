@@ -213,11 +213,19 @@ class ListField(TypedField):
     """TypedField for list
     """
 
-    def __init__(self, inner_type=None, **kwargs):
+    def __init__(self, inner_type=None, ensure_list=True, **kwargs):
+        """Constructor
+
+        inner_type              The type of field for the values in the list.
+                                if None, then it will not enforced (default : None)
+        ensure_list             Ensure that this field is always a list and never a None.
+                                All None value will be converted to list upon cleaning.
+        """
         super().__init__(allowed_type=(list, ), **kwargs)
         if inner_type is not None and not isinstance(inner_type, Field):
             raise DictFieldError(message="Innertype for ListField needs to be a Field")
         self.inner_type = inner_type
+        self.ensure_list = ensure_list
 
     def errors(self, value, with_key=None):
         yield from super().errors(value, with_key)
@@ -228,6 +236,11 @@ class ListField(TypedField):
             else:
                 for inner in value:
                     yield from self.inner_type.errors(inner, None)
+
+    def clean(self, document, key, **kwargs):
+        super().clean(document, key, **kwargs)
+        if self.ensure_list and document.get(key) is None:
+            document[key] = []
 
 
 class DateTimeField(Field):
