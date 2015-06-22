@@ -213,7 +213,7 @@ class ListField(TypedField):
     """TypedField for list
     """
 
-    def __init__(self, inner_type=None, ensure_list=True, **kwargs):
+    def __init__(self, inner_type=None, ensure_list=True, remove_none_value=True, **kwargs):
         """Constructor
 
         inner_type              The type of field for the values in the list.
@@ -226,6 +226,7 @@ class ListField(TypedField):
             raise DictFieldError(message="Innertype for ListField needs to be a Field")
         self.inner_type = inner_type
         self.ensure_list = ensure_list
+        self.remove_none_value = remove_none_value
 
     def errors(self, value, with_key=None):
         yield from super().errors(value, with_key)
@@ -241,7 +242,9 @@ class ListField(TypedField):
         super().clean(document, key, **kwargs)
         if self.ensure_list and document.get(key) is None:
             document[key] = []
-
+        if (self.remove_none_value and document.get(key) is not None and
+                isinstance(document.get(key), list)):
+            document[key] = [ item for item in document.get(key) if item is not None ]
 
 class DateTimeField(Field):
     """Field used to store datetime object.
