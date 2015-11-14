@@ -189,6 +189,30 @@ def dict_combine(d1, d2): # d1 + d2, conflicting keys will be taken from d1
     return d3
 
 
+def dict_flatten(item, flatten_list=True):
+    def _flatten(key, value):
+        if isinstance(value, dict):
+            attributes = []
+            for k, v in value.items():
+                _k = []
+                _k.extend(key)
+                _k.append(k)
+                attributes.extend(_flatten(_k, v))
+
+            return attributes
+        elif isinstance(value, list) and flatten_list:
+            output = []
+            for index, v in enumerate(value):
+                _k = []
+                _k.extend(key)
+                _k.append(str(index))
+                output.extend(_flatten(_k, v))
+            return output
+        else:
+            return [(".".join(key), value)]
+
+    return _flatten([], item)
+
 if __name__ == "__main__":
     import copy
     import pprint
