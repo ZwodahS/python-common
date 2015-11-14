@@ -202,20 +202,20 @@ if __name__ == "__main__":
 
     # test case : (title, query, expectation)
     TESTS = [
-        ('thingalwaysreturneverything', {}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('include_onlyreturnsnothing', {'include_only':True}, {}), 
-        ('preservationofemptylist', {'exclude':['c.a', 'c.b']}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{}, {}], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('non-preservationofemptylist', {'exclude':['c.a', 'c.b'], 'preserve_empty_values':False}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('excludesinglefieldinroot', {'exclude':['a']}, {'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('excludenestedfield', {'exclude':['a.b']}, {'a':{'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('excludemultiplenestedfields', {'exclude':['a.b', 'a.c']}, {'a':{'d':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('excludenestedfieldinlistdictionary', {'exclude':['c.b']}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('excludenotaffectingnon-matching', {'exclude':['b.a']}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('includeinnerfieldwhileexcludingouterfield', {'exclude':['a'], 'include':['a.b']}, {'a':{'b':1}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}), 
-        ('includerootwheninclude_only', {'include_only':True, 'include':['a']}, {'a':{'b':1, 'c':2, 'd':3}}), 
-        ('includenested_fieldswheninclude_only', {'include_only':True, 'include':['a.b']}, {'a':{'b':1}, }), 
-        ('includefieldsinlistwheninclude_only', {'include_only':True, 'include':['c.a']}, {'c':[{'a':{'b':1}}, {'a':{'b':2, 'c':3}}]}), 
-        ('excludeinnerfieldwhileincludingouterfield', {'include_only':True, 'include':['a'], 'exclude':['a.b']}, {'a':{'c':2, 'd':3}}), 
+        ('thingalwaysreturneverything', {}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}),
+        ('include_onlyreturnsnothing', {'include_only':True}, {}),
+        ('preservationofemptylist', {'exclude':['c.a', 'c.b']}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{}, {}], 'd':{'a':1, 'b':{'c':1}}}),
+        ('non-preservationofemptylist', {'exclude':['c.a', 'c.b'], 'preserve_empty_values':False}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'd':{'a':1, 'b':{'c':1}}}),
+        ('excludesinglefieldinroot', {'exclude':['a']}, {'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}),
+        ('excludenestedfield', {'exclude':['a.b']}, {'a':{'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}),
+        ('excludemultiplenestedfields', {'exclude':['a.b', 'a.c']}, {'a':{'d':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}),
+        ('excludenestedfieldinlistdictionary', {'exclude':['c.b']}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}),
+        ('excludenotaffectingnon-matching', {'exclude':['b.a']}, {'a':{'b':1, 'c':2, 'd':3}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}),
+        ('includeinnerfieldwhileexcludingouterfield', {'exclude':['a'], 'include':['a.b']}, {'a':{'b':1}, 'b':[1, 2, 3, 4], 'c':[{'a':{'b':1}, 'b':{'a':1}}, {'a':{'b':2, 'c':3}}], 'd':{'a':1, 'b':{'c':1}}}),
+        ('includerootwheninclude_only', {'include_only':True, 'include':['a']}, {'a':{'b':1, 'c':2, 'd':3}}),
+        ('includenested_fieldswheninclude_only', {'include_only':True, 'include':['a.b']}, {'a':{'b':1}, }),
+        ('includefieldsinlistwheninclude_only', {'include_only':True, 'include':['c.a']}, {'c':[{'a':{'b':1}}, {'a':{'b':2, 'c':3}}]}),
+        ('excludeinnerfieldwhileincludingouterfield', {'include_only':True, 'include':['a'], 'exclude':['a.b']}, {'a':{'c':2, 'd':3}}),
     ]
 
     pp = pprint.PrettyPrinter(indent=4)
